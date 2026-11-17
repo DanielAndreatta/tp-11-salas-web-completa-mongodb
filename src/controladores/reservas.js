@@ -111,6 +111,9 @@ function crearControladorReservas(servicioReservas) {
       estado: valores.estado.trim()
     };
 
+    // Guardamos el contexto para el manejador de errores
+    res.locals.formularioEdicion = { id: reserva.id, valores };
+
     // 6. Usamos el MISMO servicio que usa el PUT de la API
     const actualizado = await servicioReservas.reemplazar(reserva.id, reemplazo);
 

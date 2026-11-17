@@ -32,6 +32,16 @@ function crearManejadorErrores({ vistaFormulario, tituloFormulario }) {
       });
     }
 
+    // Rama específica para errores durante la EDICIÓN web
+    if (esValidacion && req.method === "POST" && res.locals.formularioEdicion) {
+      return res.status(400).render("reservas/editar", {
+        titulo: "Editar reserva",
+        error: mensaje,
+        id: res.locals.formularioEdicion.id,
+        valores: res.locals.formularioEdicion.valores,
+      });
+    }
+
     // Respuesta para el sitio HTML (Formulario)
     if (esValidacion && req.method === "POST") {
       return res.status(400).render(vistaFormulario, {
