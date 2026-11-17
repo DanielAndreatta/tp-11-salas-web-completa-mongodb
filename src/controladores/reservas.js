@@ -44,6 +44,87 @@ function crearControladorReservas(servicioReservas) {
     });
   }
 
+  async function guardarEdicion(req, res) {
+    // 1. Verificamos que la reserva aún exista
+    const reserva = await servicioReservas.obtenerPorId(req.params.id);
+    if (!reserva) {
+      return res.status(404).render("no-encontrado", {
+        titulo: "Reserva no encontrada",
+        mensaje: "La reserva ya no existe. No se guardaron cambios.",
+      });
+    }
+
+    const datos = req.body ?? {};
+
+    // 2. Extraemos todos como texto
+    const valores = {
+      estudiante: typeof datos.estudiante === "string" ? datos.estudiante : "",
+      email: typeof datos.email === "string" ? datos.email : "",
+      sala: typeof datos.sala === "string" ? datos.sala : "",
+      fecha: typeof datos.fecha === "string" ? datos.fecha : "",
+      turno: typeof datos.turno === "string" ? datos.turno : "",
+      personas: typeof datos.personas === "string" ? datos.personas : "",
+      estado: typeof datos.estado === "string" ? datos.estado : "",
+    };
+
+    const permitidos = ["estudiante", "email", "sala", "fecha", "turno", "personas", "estado"];
+    let hayCamposExtra = false;
+
+    for (const campo of Object.keys(datos)) {
+      if (!permitidos.includes(campo)) hayCamposExtra = true;
+    }
+
+    // 3. Convertimos 'personas' a número validando que no esté vacío
+    const personasParseado = valores.personas.trim() === "" ? NaN : Number(valores.personas);
+
+    // 4. Validación estricta del formulario
+    if (
+      hayCamposExtra ||
+      !valores.estudiante.trim() ||
+      !valores.email.trim() ||
+      !valores.sala.trim() ||
+      !valores.fecha.trim() ||
+      !valores.turno.trim() ||
+      !valores.estado.trim() ||
+      !Number.isFinite(personasParseado) ||
+      !Number.isInteger(personasParseado) ||
+      personasParseado < 1 ||
+      personasParseado > 6
+    ) {
+      // Si algo falla, devolvemos el HTML 400 con los valores conservados
+      return res.status(400).render("reservas/editar", {
+        titulo: "Editar reserva",
+        error: "Completá todos los textos correctamente, asegurate de no enviar campos extra, y que personas sea un número entre 1 y 6.",
+        id: reserva.id,
+        valores: valores,
+      });
+    }
+
+    // 5. Preparamos el reemplazo recortando espacios
+    const reemplazo = {
+      estudiante: valores.estudiante.trim(),
+      email: valores.email.trim(),
+      sala: valores.sala.trim(),
+      fecha: valores.fecha.trim(),
+      turno: valores.turno.trim(),
+      personas: personasParseado,
+      estado: valores.estado.trim()
+    };
+
+    // 6. Usamos el MISMO servicio que usa el PUT de la API
+    const actualizado = await servicioReservas.reemplazar(reserva.id, reemplazo);
+
+    if (!actualizado) {
+      return res.status(404).render("no-encontrado", {
+        titulo: "Reserva no encontrada",
+        mensaje: "La reserva ya no existe. No se guardaron cambios.",
+      });
+    }
+
+    // 7. Redirigimos al detalle con código 303 (See Other)
+    res.redirect(303, `/reservas/${actualizado.id}`);
+  }
+
   async function mostrarDetalle(req, res) {
     const reserva = await servicioReservas.obtenerPorId(req.params.id);
     if (!reserva) {
@@ -190,6 +271,7 @@ function crearControladorReservas(servicioReservas) {
     listar,
     mostrarFormulario,
     mostrarEdicion,
+    guardarEdicion,
     mostrarDetalle,
     crear,
     listarApi,
