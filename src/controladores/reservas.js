@@ -26,6 +26,24 @@ function crearControladorReservas(servicioReservas) {
     });
   }
 
+  async function mostrarEdicion(req, res) {
+    const reserva = await servicioReservas.obtenerPorId(req.params.id);
+
+    if (!reserva) {
+      return res.status(404).render("no-encontrado", {
+        titulo: "Reserva no encontrada",
+        mensaje: "No existe la reserva que querés editar.",
+      });
+    }
+
+    res.render("reservas/editar", {
+      titulo: "Editar reserva",
+      error: null,
+      id: reserva.id,
+      valores: reserva, // Pasamos todos los datos actuales
+    });
+  }
+
   async function mostrarDetalle(req, res) {
     const reserva = await servicioReservas.obtenerPorId(req.params.id);
     if (!reserva) {
@@ -171,6 +189,7 @@ function crearControladorReservas(servicioReservas) {
     estado,
     listar,
     mostrarFormulario,
+    mostrarEdicion,
     mostrarDetalle,
     crear,
     listarApi,

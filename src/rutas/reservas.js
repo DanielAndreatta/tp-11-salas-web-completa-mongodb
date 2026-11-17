@@ -12,6 +12,7 @@ function crearRouterReservas(controladorReservas) {
 
   router.get("/", controladorReservas.listar);
   router.get("/nueva", controladorReservas.mostrarFormulario);
+  router.get("/:id/editar", controladorReservas.mostrarEdicion);
   router.get("/:id", controladorReservas.mostrarDetalle);
 
   router.post("/", validarReserva, controladorReservas.crear);
